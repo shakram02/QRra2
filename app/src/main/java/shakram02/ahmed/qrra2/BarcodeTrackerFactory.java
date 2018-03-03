@@ -17,7 +17,6 @@ package shakram02.ahmed.qrra2;
 
 import android.content.Context;
 
-
 import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.barcode.Barcode;

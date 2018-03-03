@@ -20,7 +20,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
 
-
 import com.google.android.gms.vision.barcode.Barcode;
 
 import shakram02.ahmed.qrra2.camera.GraphicOverlay;
@@ -31,16 +30,13 @@ import shakram02.ahmed.qrra2.camera.GraphicOverlay;
  */
 public class BarcodeGraphic extends GraphicOverlay.Graphic {
 
-    private int mId;
-
     private static final int COLOR_CHOICES[] = {
             Color.BLUE,
             Color.CYAN,
             Color.GREEN
     };
-
     private static int mCurrentColorIndex = 0;
-
+    private int mId;
     private Paint mRectPaint;
     private Paint mTextPaint;
     private volatile Barcode mBarcode;
