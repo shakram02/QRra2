@@ -10,16 +10,6 @@
     tools:context="shakram02.ahmed.qrra2.MainActivity">
 
     <TextView
-        android:id="@+id/status_message"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_centerHorizontal="true"
-        android:text="@string/barcode_header"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
         android:id="@+id/barcode_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
