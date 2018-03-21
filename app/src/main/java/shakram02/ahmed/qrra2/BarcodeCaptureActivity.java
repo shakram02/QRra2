@@ -57,7 +57,7 @@ import shakram02.ahmed.qrra2.camera.GraphicOverlay;
  * rear facing camera. During detection overlay graphics are drawn to indicate the position,
  * size, and ID of each barcode.
  */
-public final class BarcodeCaptureActivity extends AppCompatActivity implements BarcodeGraphicTracker.BarcodeUpdateListener {
+public final class BarcodeCaptureActivity extends AppCompatActivity {
     // constants used to pass extra data in the intent
     public static final String AutoFocus = "AutoFocus";
     public static final String UseFlash = "UseFlash";
@@ -364,17 +364,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onBarcodeDetected(Barcode barcode) {
-        //do something with barcode data returned
-        Log.i("BarcodeValue", "Found:" + barcode.rawValue);
-        // TODO: Add action
-        Intent data = new Intent();
-        data.putExtra(BarcodeObject, barcode);
-        setResult(CommonStatusCodes.SUCCESS, data);
-        finish();
     }
 
     private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
