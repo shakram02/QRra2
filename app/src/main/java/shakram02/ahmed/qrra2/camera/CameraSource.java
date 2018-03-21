@@ -125,6 +125,7 @@ public class CameraSource {
      * native code later (avoids a potential copy).
      */
     private Map<byte[], ByteBuffer> mBytesToByteBuffer = new HashMap<>();
+
     /**
      * Only allow creation via the builder class.
      */
@@ -1156,6 +1157,7 @@ public class CameraSource {
                         try {
                             // Wait for the next frame to be received from the camera, since we
                             // don't have it yet.
+                            Thread.sleep(700);
                             mLock.wait();
                         } catch (InterruptedException e) {
                             Log.d(TAG, "Frame processing loop terminated.", e);

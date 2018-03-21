@@ -36,8 +36,10 @@ public class QrSpellerFactory implements MultiProcessor.Factory<Barcode>, TextTo
         // a better tracker
         // We might want to join rectangles of many tracker also to track
         // a whole word
-
-        tts.speak(barcode.rawValue, TextToSpeech.QUEUE_ADD, null);
+        if (tts.isSpeaking()) {
+            tts.stop();
+        }
+        tts.speak(barcode.rawValue, TextToSpeech.QUEUE_FLUSH, null);
         return new Tracker<>();
     }
 
