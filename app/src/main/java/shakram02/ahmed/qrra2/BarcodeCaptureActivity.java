@@ -57,7 +57,7 @@ import shakram02.ahmed.qrra2.camera.GraphicOverlay;
  * rear facing camera. During detection overlay graphics are drawn to indicate the position,
  * size, and ID of each barcode.
  */
-public final class BarcodeCaptureActivity extends AppCompatActivity implements BarcodeGraphicTracker.BarcodeUpdateListener {
+public final class BarcodeCaptureActivity extends AppCompatActivity {
     // constants used to pass extra data in the intent
     public static final String AutoFocus = "AutoFocus";
     public static final String UseFlash = "UseFlash";
@@ -166,9 +166,11 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
         // graphics for each barcode on screen.  The factory is used by the multi-processor to
         // create a separate tracker instance for each barcode.
         BarcodeDetector barcodeDetector = new BarcodeDetector.Builder(context).build();
-        BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay, this);
-        barcodeDetector.setProcessor(
-                new MultiProcessor.Builder<>(barcodeFactory).build());
+//        BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay, this);
+//        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(barcodeFactory).build());
+
+        QrSpellerFactory qrSpeller = new QrSpellerFactory(context);
+        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(qrSpeller).build());
 
         if (!barcodeDetector.isOperational()) {
             // Note: The first time that an app using the barcode or face API is installed on a
@@ -362,11 +364,6 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void onBarcodeDetected(Barcode barcode) {
-        //do something with barcode data returned
     }
 
     private class CaptureGestureListener extends GestureDetector.SimpleOnGestureListener {
