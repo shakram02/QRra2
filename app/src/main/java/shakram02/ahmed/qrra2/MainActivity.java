@@ -19,39 +19,60 @@ package shakram02.ahmed.qrra2;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
-import android.widget.TextView;
+import android.widget.ListView;
 
-import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.vision.barcode.Barcode;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
  * reads barcodes.
  */
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
     private static final int RC_BARCODE_CAPTURE = 9001;
-    private static final String TAG = "BarcodeMain";
     // use a compound button so either checkbox or switch widgets work.
     private CompoundButton autoFocus;
     private CompoundButton useFlash;
-    private TextView barcodeValue;
+    private String ttsEngineName;
+    private List<TextToSpeech.EngineInfo> engines;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        barcodeValue = (TextView) findViewById(R.id.barcode_value);
-
         autoFocus = (CompoundButton) findViewById(R.id.auto_focus);
         useFlash = (CompoundButton) findViewById(R.id.use_flash);
 
+        TextToSpeech tts = new TextToSpeech(MainActivity.this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+            }
+        });
+        final ListView engineListView = findViewById(R.id.engine_list);
+        engines = tts.getEngines();
+        ArrayList<String> engineNames = new ArrayList<>();
+        for (TextToSpeech.EngineInfo info : engines) {
+            engineNames.add(info.label);
+        }
+        tts.shutdown();
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this,
+                android.R.layout.simple_list_item_1, android.R.id.text1, engineNames);
+
+        ttsEngineName = engines.get(0).name;
+        engineListView.setAdapter(adapter);
+        engineListView.setOnItemClickListener(MainActivity.this);
         findViewById(R.id.read_barcode).setOnClickListener(this);
     }
+
 
     /**
      * Called when a view has been clicked.
@@ -65,11 +86,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Intent intent = new Intent(this, BarcodeCaptureActivity.class);
             intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
             intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
-
+            intent.putExtra(BarcodeCaptureActivity.TtsService, ttsEngineName);
             startActivityForResult(intent, RC_BARCODE_CAPTURE);
         }
 
     }
+
 
     /**
      * Called when an activity you launched exits, giving you the requestCode
@@ -113,5 +135,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
 //        } else {
 //            super.onActivityResult(requestCode, resultCode, data);
 //        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Log.i("ListViewClick", "Selected: " + engines.get(position).name);
+        ttsEngineName = engines.get(position).name;
     }
 }

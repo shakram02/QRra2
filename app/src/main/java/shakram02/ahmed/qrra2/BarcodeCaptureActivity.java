@@ -63,6 +63,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     public static final String UseFlash = "UseFlash";
     public static final String BarcodeObject = "Barcode";
     private static final String TAG = "Barcode-reader";
+    public static final String TtsService = "Tts-service";
+
     // intent request code to handle updating play services if needed.
     private static final int RC_HANDLE_GMS = 9001;
     // permission request codes need to be < 256
@@ -70,7 +72,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
     private CameraSource mCameraSource;
     private CameraSourcePreview mPreview;
     private GraphicOverlay<BarcodeGraphic> mGraphicOverlay;
-
+    private String ttsEngineName;
     // helper objects for detecting taps and pinches.
     private ScaleGestureDetector scaleGestureDetector;
     private GestureDetector gestureDetector;
@@ -89,6 +91,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         // read parameters from the intent used to launch the activity.
         boolean autoFocus = getIntent().getBooleanExtra(AutoFocus, false);
         boolean useFlash = getIntent().getBooleanExtra(UseFlash, false);
+        ttsEngineName = getIntent().getStringExtra(TtsService);
 
         // Check for the camera permission before accessing the camera.  If the
         // permission is not granted yet, request permission.
@@ -169,7 +172,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
 //        BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay, this);
 //        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(barcodeFactory).build());
 
-        QrSpellerFactory qrSpeller = new QrSpellerFactory(context);
+        QrSpellerFactory qrSpeller = new QrSpellerFactory(context, ttsEngineName);
         barcodeDetector.setProcessor(new MultiProcessor.Builder<>(qrSpeller).build());
 
         if (!barcodeDetector.isOperational()) {
