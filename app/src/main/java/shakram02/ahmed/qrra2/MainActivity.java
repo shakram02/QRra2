@@ -19,13 +19,13 @@ package shakram02.ahmed.qrra2;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.TextView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
-import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.vision.barcode.Barcode;
+import java.util.List;
 
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
@@ -34,24 +34,34 @@ import com.google.android.gms.vision.barcode.Barcode;
 public class MainActivity extends Activity implements View.OnClickListener {
 
     private static final int RC_BARCODE_CAPTURE = 9001;
-    private static final String TAG = "BarcodeMain";
     // use a compound button so either checkbox or switch widgets work.
     private CompoundButton autoFocus;
     private CompoundButton useFlash;
-    private TextView barcodeValue;
+    private String ttsEngineName;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        barcodeValue = (TextView) findViewById(R.id.barcode_value);
-
         autoFocus = (CompoundButton) findViewById(R.id.auto_focus);
         useFlash = (CompoundButton) findViewById(R.id.use_flash);
 
+        TextToSpeech tts = new TextToSpeech(MainActivity.this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+            }
+        });
+
+        final List<TextToSpeech.EngineInfo> engines = tts.getEngines();
+        tts.shutdown();
+
+        createTtsEngineSelection(engines);
+
         findViewById(R.id.read_barcode).setOnClickListener(this);
     }
+
 
     /**
      * Called when a view has been clicked.
@@ -65,11 +75,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Intent intent = new Intent(this, BarcodeCaptureActivity.class);
             intent.putExtra(BarcodeCaptureActivity.AutoFocus, autoFocus.isChecked());
             intent.putExtra(BarcodeCaptureActivity.UseFlash, useFlash.isChecked());
-
+            intent.putExtra(BarcodeCaptureActivity.TtsService, ttsEngineName);
             startActivityForResult(intent, RC_BARCODE_CAPTURE);
         }
 
     }
+
 
     /**
      * Called when an activity you launched exits, giving you the requestCode
@@ -113,5 +124,35 @@ public class MainActivity extends Activity implements View.OnClickListener {
 //        } else {
 //            super.onActivityResult(requestCode, resultCode, data);
 //        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private void createTtsEngineSelection(final List<TextToSpeech.EngineInfo> engines) {
+        final RadioGroup engineListView = findViewById(R.id.engine_list);
+
+        for (int i = 0; i < engines.size(); i++) {
+            String engineName = engines.get(i).label;
+            RadioButton radioButton = new RadioButton(this);
+
+            radioButton.setText(engineName);
+            radioButton.setTag(i);
+            radioButton.setId(i);
+
+            // Default engine
+            if (i == 0) {
+                radioButton.setChecked(true);
+                ttsEngineName = engineName;
+            }
+
+            radioButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int index = (int) v.getTag();
+                    ttsEngineName = engines.get(index).name;
+                }
+            });
+
+            engineListView.addView(radioButton);
+        }
     }
 }
