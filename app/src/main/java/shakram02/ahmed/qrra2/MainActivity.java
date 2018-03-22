@@ -20,28 +20,25 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
-import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Main activity demonstrating how to pass extra parameters to an activity that
  * reads barcodes.
  */
-public class MainActivity extends Activity implements View.OnClickListener, AdapterView.OnItemClickListener {
+public class MainActivity extends Activity implements View.OnClickListener {
 
     private static final int RC_BARCODE_CAPTURE = 9001;
     // use a compound button so either checkbox or switch widgets work.
     private CompoundButton autoFocus;
     private CompoundButton useFlash;
     private String ttsEngineName;
-    private List<TextToSpeech.EngineInfo> engines;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,20 +53,12 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
             public void onInit(int status) {
             }
         });
-        final ListView engineListView = findViewById(R.id.engine_list);
-        engines = tts.getEngines();
-        ArrayList<String> engineNames = new ArrayList<>();
-        for (TextToSpeech.EngineInfo info : engines) {
-            engineNames.add(info.label);
-        }
+
+        final List<TextToSpeech.EngineInfo> engines = tts.getEngines();
         tts.shutdown();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this,
-                android.R.layout.simple_list_item_1, android.R.id.text1, engineNames);
+        createTtsEngineSelection(engines);
 
-        ttsEngineName = engines.get(0).name;
-        engineListView.setAdapter(adapter);
-        engineListView.setOnItemClickListener(MainActivity.this);
         findViewById(R.id.read_barcode).setOnClickListener(this);
     }
 
@@ -138,9 +127,32 @@ public class MainActivity extends Activity implements View.OnClickListener, Adap
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.i("ListViewClick", "Selected: " + engines.get(position).name);
-        ttsEngineName = engines.get(position).name;
+    private void createTtsEngineSelection(final List<TextToSpeech.EngineInfo> engines) {
+        final RadioGroup engineListView = findViewById(R.id.engine_list);
+
+        for (int i = 0; i < engines.size(); i++) {
+            String engineName = engines.get(i).label;
+            RadioButton radioButton = new RadioButton(this);
+
+            radioButton.setText(engineName);
+            radioButton.setTag(i);
+            radioButton.setId(i);
+
+            // Default engine
+            if (i == 0) {
+                radioButton.setChecked(true);
+                ttsEngineName = engineName;
+            }
+
+            radioButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int index = (int) v.getTag();
+                    ttsEngineName = engines.get(index).name;
+                }
+            });
+
+            engineListView.addView(radioButton);
+        }
     }
 }
