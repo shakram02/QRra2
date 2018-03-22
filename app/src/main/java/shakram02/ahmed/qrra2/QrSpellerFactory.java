@@ -16,14 +16,14 @@ import java.util.Locale;
 
 public class QrSpellerFactory implements MultiProcessor.Factory<Barcode>, TextToSpeech.OnInitListener {
     TextToSpeech tts;
-    private static final String ESPEAK_ENGINE = "com.redzoc.ramees.tts.espeak";
+    private static final String SMART_VOICE_ENGINE = "tts.smartvoice";
     private static final String ACTIVITY_TAG = "QrSpeller";
 
     public QrSpellerFactory(Context context) {
         tts = new TextToSpeech(context, this);
         tts.setLanguage(Locale.US);
 
-        tts = new TextToSpeech(context, this, ESPEAK_ENGINE);
+        tts = new TextToSpeech(context, this, SMART_VOICE_ENGINE);
     }
 
     @Override
