@@ -41,10 +41,7 @@ public class IterativeBarcodeDetector extends FrameDataListener {
         do {
             // Create a new frame, detect codes in it, hide the detected codes,
             // repeat to detect the remaining codes
-            frame = new Frame.Builder().setBitmap(bitmap)
-                    .setId(frameData.getId())
-                    .setTimestampMillis(frameData.getTimestamp())
-                    .build();
+            frame = new Frame.Builder().setBitmap(bitmap).build();
 
             barcodeSparseArray = this.detector.detect(frame);
 
@@ -54,7 +51,7 @@ public class IterativeBarcodeDetector extends FrameDataListener {
 
             for (int i = 0; i < barcodeSparseArray.size(); i++) {
                 Barcode barcode = barcodeSparseArray.valueAt(i);
-                result.append(barcodeSparseArray.keyAt(i), barcode);
+                result.append(result.size(), barcode);
 
                 qrHider.hide(new RectF(barcode.getBoundingBox()), bitmap);
             }
