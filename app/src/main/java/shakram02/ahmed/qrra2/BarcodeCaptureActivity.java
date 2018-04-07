@@ -167,8 +167,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         // graphics for each barcode on screen.  The factory is used by the multi-processor to
         // create a separate tracker instance for each barcode.
 
-        IterativeBarcodeListener barcodeDetector = new IterativeBarcodeListener(context);
-
+        IterativeBarcodeDetector barcodeDetector = new IterativeBarcodeDetector(context);
+        barcodeDetector.setProcessor(new QrWordProcessor(context, ttsEngineName));
 //        BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay, this);
 //        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(barcodeFactory).build());
 

@@ -7,7 +7,6 @@ import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.YuvImage;
-import android.util.Log;
 import android.util.SparseArray;
 
 import com.google.android.gms.vision.Detector;
@@ -18,41 +17,21 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
-public class IterativeBarcodeListener extends FrameDataListener implements Detector.Processor<Barcode> {
+public class IterativeBarcodeDetector extends FrameDataListener {
     private BarcodeDetector detector;
-    private static String DETECTOR_TAG = "IterativeDetector";
     private static QrHider qrHider = new QrHider();
+    private Detector.Processor<Barcode> processor;
 
-    IterativeBarcodeListener(Context context) {
+    IterativeBarcodeDetector(Context context) {
         detector = new BarcodeDetector.Builder(context).build();
-        // Detector.Processor interface is implemented because of the following line
-        detector.setProcessor(this);    // TODO this is extremely stupid, remove the implementation of that interface
-    }
-
-
-    @Override
-    public void receiveDetections(Detector.Detections<Barcode> detections) {
-        if (detections.getDetectedItems().size() == 0) {
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        SparseArray<Barcode> detected = detections.getDetectedItems();
-        for (int i = 0; i < detected.size(); i++) {
-            sb.append(detected.valueAt(i).rawValue);
-            sb.append(" - ");
-        }
-
-        Log.i(DETECTOR_TAG, String.format("Found %s detections: %s",
-                detections.getDetectedItems().size(), sb.toString()));
-    }
-
-    public boolean isOperational() {
-        return detector.isOperational();
     }
 
     @Override
     public synchronized void receiveFrameData(FrameData frameData) {
+        if (this.processor == null) {
+            throw new IllegalStateException("Detector processor must first be set with setProcessor in order to receive detection results.");
+        }
+
         SparseArray<Barcode> result = new SparseArray<>();
         SparseArray<Barcode> barcodeSparseArray;
 
@@ -62,7 +41,6 @@ public class IterativeBarcodeListener extends FrameDataListener implements Detec
         do {
             // Create a new frame, detect codes in it, hide the detected codes,
             // repeat to detect the remaining codes
-
             frame = new Frame.Builder().setBitmap(bitmap)
                     .setId(frameData.getId())
                     .setTimestampMillis(frameData.getTimestamp())
@@ -83,14 +61,21 @@ public class IterativeBarcodeListener extends FrameDataListener implements Detec
         } while (barcodeSparseArray.size() > 0);
 
         // Done
-        this.receiveDetections(new Detector.Detections<>(result,
+        this.processor.receiveDetections(new Detector.Detections<>(result,
                 frame.getMetadata(), detector.isOperational()));
     }
 
+    public boolean isOperational() {
+        return detector.isOperational();
+    }
+
+    public void setProcessor(Detector.Processor<Barcode> processor) {
+        this.processor = processor;
+    }
 
     @Override
     public void release() {
-
+        this.processor.release();
     }
 
     /**
@@ -110,5 +95,4 @@ public class IterativeBarcodeListener extends FrameDataListener implements Detec
         Bitmap bitmap = BitmapFactory.decodeByteArray(jpegArray, 0, jpegArray.length);
         return bitmap.copy(Bitmap.Config.ARGB_8888, true);
     }
-
 }
