@@ -42,9 +42,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.CommonStatusCodes;
-import com.google.android.gms.vision.MultiProcessor;
 import com.google.android.gms.vision.barcode.Barcode;
-import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.IOException;
 
@@ -168,12 +166,15 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         // is set to receive the barcode detection results, track the barcodes, and maintain
         // graphics for each barcode on screen.  The factory is used by the multi-processor to
         // create a separate tracker instance for each barcode.
-        BarcodeDetector barcodeDetector = new BarcodeDetector.Builder(context).build();
+
+        IterativeBarcodeListener barcodeDetector = new IterativeBarcodeListener(context);
+
 //        BarcodeTrackerFactory barcodeFactory = new BarcodeTrackerFactory(mGraphicOverlay, this);
 //        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(barcodeFactory).build());
 
-        QrSpellerFactory qrSpeller = new QrSpellerFactory(context, ttsEngineName);
-        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(qrSpeller).build());
+//        QrWordProcessor qrSpeller = new QrWordProcessor(context, ttsEngineName);
+//        barcodeDetector.setProcessor(new MultiProcessor.Builder<>(qrSpeller).build());
+//        barcodeDetector.setProcessor(new BarcodeProcessor());
 
         if (!barcodeDetector.isOperational()) {
             // Note: The first time that an app using the barcode or face API is installed on a
@@ -204,7 +205,7 @@ public final class BarcodeCaptureActivity extends AppCompatActivity {
         CameraSource.Builder builder = new CameraSource.Builder(getApplicationContext(), barcodeDetector)
                 .setFacing(CameraSource.CAMERA_FACING_BACK)
                 .setRequestedPreviewSize(1600, 1024)
-                .setRequestedFps(15.0f);
+                .setRequestedFps(15f);
 
         // make sure that auto focus is an available option
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {

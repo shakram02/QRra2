@@ -35,7 +35,6 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.google.android.gms.common.images.Size;
-import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.Frame;
 
 import java.io.IOException;
@@ -47,6 +46,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import shakram02.ahmed.qrra2.FrameData;
+import shakram02.ahmed.qrra2.FrameDataListener;
 
 // Note: This requires Google Play Services 8.1 or higher, due to using indirect byte buffers for
 // storing images.
@@ -869,14 +871,14 @@ public class CameraSource {
      * Builder for configuring and creating an associated camera source.
      */
     public static class Builder {
-        private final Detector<?> mDetector;
+        private final FrameDataListener mDetector;
         private CameraSource mCameraSource = new CameraSource();
 
         /**
          * Creates a camera source builder with the supplied context and detector.  Camera preview
          * images will be streamed to the associated detector upon starting the camera source.
          */
-        public Builder(Context context, Detector<?> detector) {
+        public Builder(Context context, FrameDataListener detector) {
             if (context == null) {
                 throw new IllegalArgumentException("No context supplied.");
             }
@@ -1068,7 +1070,7 @@ public class CameraSource {
     private class FrameProcessingRunnable implements Runnable {
         // This lock guards all of the member variables below.
         private final Object mLock = new Object();
-        private Detector<?> mDetector;
+        private FrameDataListener mDetector;
         private long mStartTimeMillis = SystemClock.elapsedRealtime();
         private boolean mActive = true;
 
@@ -1077,7 +1079,7 @@ public class CameraSource {
         private int mPendingFrameId = 0;
         private ByteBuffer mPendingFrameData;
 
-        FrameProcessingRunnable(Detector<?> detector) {
+        FrameProcessingRunnable(FrameDataListener detector) {
             mDetector = detector;
         }
 
@@ -1148,7 +1150,7 @@ public class CameraSource {
          */
         @Override
         public void run() {
-            Frame outputFrame;
+            FrameData outputFrameData;
             ByteBuffer data;
 
             while (true) {
@@ -1172,13 +1174,10 @@ public class CameraSource {
                         return;
                     }
 
-                    outputFrame = new Frame.Builder()
-                            .setImageData(mPendingFrameData, mPreviewSize.getWidth(),
-                                    mPreviewSize.getHeight(), ImageFormat.NV21)
-                            .setId(mPendingFrameId)
-                            .setTimestampMillis(mPendingTimeMillis)
-                            .setRotation(mRotation)
-                            .build();
+                    outputFrameData = new FrameData(mPendingFrameData,
+                            mPreviewSize.getWidth(), mPreviewSize.getHeight(),
+                            mPendingFrameId, mPendingTimeMillis, mRotation);
+
 
                     // Hold onto the frame data locally, so that we can use this for detection
                     // below.  We need to clear mPendingFrameData to ensure that this buffer isn't
@@ -1192,7 +1191,7 @@ public class CameraSource {
                 // frame.
 
                 try {
-                    mDetector.receiveFrame(outputFrame);
+                    mDetector.receiveFrameData(outputFrameData);
                 } catch (Throwable t) {
                     Log.e(TAG, "Exception thrown from receiver.", t);
                 } finally {
