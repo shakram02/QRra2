@@ -9,6 +9,7 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 
 import java.util.Locale;
+import java.util.PriorityQueue;
 
 /**
  * Created by ahmed on 3/4/18.
@@ -22,6 +23,7 @@ public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Pr
 
 
     public QrWordProcessor(Context context, String ttsEngineName) {
+        Log.i(QR_SPELLER_TAG, "TTS engine:" + ttsEngineName);
         tts = new TextToSpeech(context, this, ttsEngineName);
         tts.setLanguage(Locale.US);
 
@@ -44,18 +46,35 @@ public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Pr
         if (detections.getDetectedItems().size() == 0) {
             return;
         }
+        PriorityQueue<Barcode> barcodes = new PriorityQueue<>(50, new QrSorter());
+        SparseArray<Barcode> detected = detections.getDetectedItems();
+
+        for (int i = 0; i < detected.size(); i++) {
+            barcodes.add(detected.valueAt(i));
+        }
 
         StringBuilder sb = new StringBuilder();
-        SparseArray<Barcode> detected = detections.getDetectedItems();
-        for (int i = 0; i < detected.size(); i++) {
-            sb.append(detected.valueAt(i).rawValue);
-            sb.append(" - ");
+        while (!barcodes.isEmpty()) {
+            String val = barcodes.poll().rawValue;
+            if (val.equals(".")) {
+                sb.append(" ");
+            } else {
+                sb.append(val);
+            }
         }
 
         Log.i(QR_SPELLER_TAG, String.format("Found %s detections: %s",
                 detections.getDetectedItems().size(), sb.toString()));
+        speakWord(sb.toString());
     }
 
+    private void speakWord(String word) {
+//        if (tts.isSpeaking()) {
+//            tts.stop();
+//        }
+
+        tts.speak(word, TextToSpeech.QUEUE_ADD, null);
+    }
 //    public void onWord(String word) {
 //
 //        // TODO extract barcode value and location,
