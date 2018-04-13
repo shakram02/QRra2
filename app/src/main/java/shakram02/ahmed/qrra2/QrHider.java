@@ -21,7 +21,7 @@ public class QrHider {
     }
 
     public void hide(RectF boundingBox, Bitmap qrcode) {
-        Log.i(HIDER_TAG, String.format("Hiding: [%s, %s]", boundingBox.centerX(), boundingBox.centerY()));
+        Log.d(HIDER_TAG, String.format("Hiding: [%s, %s]", boundingBox.centerX(), boundingBox.centerY()));
         Canvas c = new Canvas(qrcode);
         c.drawRect(boundingBox, paint);
     }
