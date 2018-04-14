@@ -8,8 +8,15 @@ import android.util.SparseArray;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.PriorityQueue;
+
+import kotlin.Pair;
+import linefinder.LineFinder;
+
 
 /**
  * Created by ahmed on 3/4/18.
@@ -46,25 +53,45 @@ public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Pr
         if (detections.getDetectedItems().size() == 0) {
             return;
         }
-        PriorityQueue<Barcode> barcodes = new PriorityQueue<>(50, new QrSorter());
+
+        PriorityQueue<Pair<Double, Double>> barcodes = new PriorityQueue<>(20, new QrSorter());
+        HashMap<Pair<Double, Double>, String> pointMap = new HashMap<>();
         SparseArray<Barcode> detected = detections.getDetectedItems();
 
+        ArrayList<Pair<Double, Double>> points = new ArrayList<>();
         for (int i = 0; i < detected.size(); i++) {
-            barcodes.add(detected.valueAt(i));
+            Barcode barcode = detected.valueAt(i);
+            Pair<Double, Double> center = new Pair<>((double) barcode.getBoundingBox().centerX(),
+                    (double) barcode.getBoundingBox().centerY());
+
+            pointMap.put(center, barcode.rawValue);
+            points.add(center);
         }
 
+        LineFinder lineFinder = new LineFinder(points, 10);
         StringBuilder sb = new StringBuilder();
-        while (!barcodes.isEmpty()) {
-            String val = barcodes.poll().rawValue;
-            if (val.equals(".")) {
-                sb.append(" ");
-            } else {
-                sb.append(val);
+        StringBuilder entryStringifier = new StringBuilder();
+        HashMap<Pair<Double, Double>, HashSet<Pair<Double, Double>>> results = lineFinder.clusterLines();
+
+        for (HashMap.Entry<Pair<Double, Double>, HashSet<Pair<Double, Double>>> entry : results.entrySet()) {
+            barcodes.addAll(entry.getValue());
+
+            while (!barcodes.isEmpty()) {
+                Pair<Double, Double> linePoint = barcodes.poll();
+                String val = pointMap.get(linePoint);
+                entryStringifier.append(String.format("%s %s\n", linePoint, val));
+
+                if (val.equals(".")) {
+                    sb.append(" ");
+                } else {
+                    sb.append(val);
+                }
             }
+            barcodes.clear();
         }
 
-        Log.i(QR_SPELLER_TAG, String.format("Found %s detections: %s",
-                detections.getDetectedItems().size(), sb.toString()));
+        Log.i(QR_SPELLER_TAG, String.format("Found %s detections: %s \n%s\n",
+                detections.getDetectedItems().size(), entryStringifier.toString(), sb.toString()));
         speakWord(sb.toString());
     }
 

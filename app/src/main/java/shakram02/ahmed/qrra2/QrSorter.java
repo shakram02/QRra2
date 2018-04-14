@@ -1,15 +1,12 @@
 package shakram02.ahmed.qrra2;
 
-import com.google.android.gms.vision.barcode.Barcode;
-
 import java.util.Comparator;
 
-public class QrSorter implements Comparator<Barcode> {
-    @Override
-    public int compare(Barcode o1, Barcode o2) {
-        int x1 = o1.getBoundingBox().centerX();
-        int x2 = o2.getBoundingBox().centerX();
+import kotlin.Pair;
 
-        return Integer.compare(x1, x2);
+public class QrSorter implements Comparator<Pair<Double, Double>> {
+    @Override
+    public int compare(Pair<Double, Double> o1, Pair<Double, Double> o2) {
+        return Double.compare(o1.getSecond(), o2.getSecond());
     }
 }
