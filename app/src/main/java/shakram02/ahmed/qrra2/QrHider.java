@@ -17,7 +17,7 @@ public class QrHider {
         paint.setAntiAlias(true);
         paint.setFilterBitmap(true);
         paint.setDither(true);
-        paint.setColor(Color.BLACK);
+        paint.setColor(Color.WHITE);
     }
 
     public void hide(RectF boundingBox, Bitmap qrcode) {
