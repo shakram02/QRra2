@@ -17,11 +17,11 @@ public class QrHider {
         paint.setAntiAlias(true);
         paint.setFilterBitmap(true);
         paint.setDither(true);
-        paint.setColor(Color.BLACK);
+        paint.setColor(Color.WHITE);
     }
 
     public void hide(RectF boundingBox, Bitmap qrcode) {
-        Log.i(HIDER_TAG, String.format("Hiding: [%s, %s]", boundingBox.centerX(), boundingBox.centerY()));
+        Log.d(HIDER_TAG, String.format("Hiding: [%s, %s]", boundingBox.centerX(), boundingBox.centerY()));
         Canvas c = new Canvas(qrcode);
         c.drawRect(boundingBox, paint);
     }
