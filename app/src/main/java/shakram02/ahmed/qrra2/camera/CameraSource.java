@@ -20,6 +20,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -428,6 +429,26 @@ public class CameraSource {
                 doneCallback.mDelegate = jpeg;
                 mCamera.takePicture(startCallback, null, null, doneCallback);
             }
+        }
+    }
+
+    public void focus(Rect focusRect) {
+        if (mCamera == null) return;
+
+        Camera.Parameters parameters = mCamera.getParameters();
+        if (parameters.getMaxNumMeteringAreas() > 0) {
+            Log.i(TAG, "fancy !");
+
+
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+            List<Camera.Area> meteringAreas = new ArrayList<>();
+            meteringAreas.add(new Camera.Area(focusRect, 800));
+            parameters.setFocusAreas(meteringAreas);
+
+            mCamera.setParameters(parameters);
+            mCamera.autoFocus(new CameraAutoFocusCallback());
+        } else {
+            mCamera.autoFocus(new CameraAutoFocusCallback());
         }
     }
 
