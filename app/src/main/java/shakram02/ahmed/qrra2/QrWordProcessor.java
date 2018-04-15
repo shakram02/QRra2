@@ -9,6 +9,7 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -25,26 +26,13 @@ import linefinder.LineFinder;
 public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Processor<Barcode> {
 
     private TextToSpeech tts;
-
     private static final String QR_SPELLER_TAG = "QrSpeller";
 
 
-    public QrWordProcessor(Context context, String ttsEngineName) {
+    QrWordProcessor(Context context, String ttsEngineName) {
         Log.i(QR_SPELLER_TAG, "TTS engine:" + ttsEngineName);
         tts = new TextToSpeech(context, this, ttsEngineName);
         tts.setLanguage(Locale.US);
-
-
-//        Locale[] locales = Locale.getAvailableLocales();
-//        List<Locale> localeList = new ArrayList<>();
-//        for (Locale locale : locales) {
-//            locale.lang
-//            int res = tts.isLanguageAvailable(locale);
-//            if (res == TextToSpeech.LANG_COUNTRY_AVAILABLE) {
-//                localeList.add(locale);
-//            }
-//        }
-
     }
 
 
@@ -54,13 +42,14 @@ public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Pr
             return;
         }
 
-        PriorityQueue<Pair<Double, Double>> barcodes = new PriorityQueue<>(20, new QrSorter());
+        PriorityQueue<Pair<Double, Double>> barcodes = new PriorityQueue<>(20, new HorizontalQrSorter());
+        ArrayList<Pair<Double, Double>> points = new ArrayList<>();
         HashMap<Pair<Double, Double>, String> pointMap = new HashMap<>();
         SparseArray<Barcode> detected = detections.getDetectedItems();
 
-        ArrayList<Pair<Double, Double>> points = new ArrayList<>();
         for (int i = 0; i < detected.size(); i++) {
             Barcode barcode = detected.valueAt(i);
+
             Pair<Double, Double> center = new Pair<>((double) barcode.getBoundingBox().centerX(),
                     (double) barcode.getBoundingBox().centerY());
 
@@ -68,11 +57,15 @@ public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Pr
             points.add(center);
         }
 
-        LineFinder lineFinder = new LineFinder(points, 10);
+        Collections.sort(points, new VerticalQrSorter());   // Sort the points it helps the algorithm behave better
+
+        LineFinder lineFinder = new LineFinder(points, 17);
         StringBuilder sb = new StringBuilder();
         StringBuilder entryStringifier = new StringBuilder();
         HashMap<Pair<Double, Double>, HashSet<Pair<Double, Double>>> results = lineFinder.clusterLines();
+        StringBuilder sentence = new StringBuilder();
 
+        /// TODO sort line detections using VerticalQrSorter
         for (HashMap.Entry<Pair<Double, Double>, HashSet<Pair<Double, Double>>> entry : results.entrySet()) {
             barcodes.addAll(entry.getValue());
 
@@ -81,67 +74,28 @@ public class QrWordProcessor implements TextToSpeech.OnInitListener, Detector.Pr
                 String val = pointMap.get(linePoint);
                 entryStringifier.append(String.format("%s %s\n", linePoint, val));
 
-                if (val.equals(".")) {
-                    sb.append(" ");
-                } else {
-                    sb.append(val);
-                }
+                sb.append(val);
             }
-            barcodes.clear();
+
+            // Append well-formed words to sentence builder, otherwise discard them
+            if (sb.toString().endsWith(".") && !sb.toString().equals(".")) {
+                sentence.append(sb.toString());
+            }
+
+            sb = new StringBuilder();
         }
 
-        Log.i(QR_SPELLER_TAG, String.format("Found %s detections: %s \n%s\n",
-                detections.getDetectedItems().size(), entryStringifier.toString(), sb.toString()));
-        speakWord(sb.toString());
+        String readSentence = sentence.toString();
+        Log.i(QR_SPELLER_TAG, String.format("Found %s detections [%s lines]: \n%s \n%s\n",
+                detections.getDetectedItems().size(), results.size(),
+                entryStringifier.toString(), readSentence));
+
+        speakWord(readSentence);
     }
 
     private void speakWord(String word) {
-//        if (tts.isSpeaking()) {
-//            tts.stop();
-//        }
-
         tts.speak(word, TextToSpeech.QUEUE_ADD, null);
     }
-//    public void onWord(String word) {
-//
-//        // TODO extract barcode value and location,
-//        // we shouldn't read in reverse order
-//        // maybe we need to pause before finding a space character
-//
-//        // TODO if we want to track word location, we should return
-//        // a better tracker
-//        // We might want to join rectangles of many tracker also to track
-//        // a whole word
-//
-////        if (tts.isSpeaking()) {
-////            tts.stop();
-////        }
-//
-//
-//        if (!barcode.rawValue.equals(".")) {
-//            tts.speak(barcode.rawValue, TextToSpeech.QUEUE_ADD, null);
-//        }
-//        Log.i(QR_SPELLER_TAG, String.format("[%s]", barcode.rawValue) +
-//                " At:" + String.format("%s,%s", barcode.getBoundingBox().centerX(), barcode.getBoundingBox().centerY()));
-//
-//        scannedBarcodes.add(barcode);
-//        onWordProcess(barcode.rawValue);
-//
-//        return new ScannedString(barcode.rawValue, barcode.getBoundingBox());
-//    }
-
-
-//    private void onWordProcess(String scannedValue) {
-//        if (!scannedValue.equals(".")) {
-//            return;
-//        }
-//
-//        StringBuilder accumulated = new StringBuilder();
-//
-//
-//        tts.speak(accumulated.toString(), TextToSpeech.QUEUE_ADD, null);
-//        Log.i(QR_SPELLER_TAG, "Spoke " + accumulated.toString());
-//    }
 
     @Override
     public void onInit(int status) {

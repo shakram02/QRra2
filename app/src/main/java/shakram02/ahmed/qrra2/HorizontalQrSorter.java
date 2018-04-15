@@ -7,6 +7,10 @@ import kotlin.Pair;
 public class QrSorter implements Comparator<Pair<Double, Double>> {
     @Override
     public int compare(Pair<Double, Double> o1, Pair<Double, Double> o2) {
-        return Double.compare(o1.getSecond(), o2.getSecond());
+        return Double.compare(o2.getFirst(), o1.getFirst());
+    }
+
+    public void setOrientation() {
+        throw new UnsupportedOperationException();
     }
 }
